@@ -6,7 +6,7 @@
 #SingleInstance force
 
 SelectedLang = English (builtin)
-version = 1.0.1
+version = 1.1.0
 
 langs = English (builtin)
 
@@ -129,6 +129,7 @@ Run, %A_WinDir%\explorer.exe, %A_WinDir%
 MsgBox, 64, BUGGTool, %lng_wizard_ingame%
 gosub GracefulExplorerExit
 RegRead, Ingame, HKEY_CURRENT_USER, Software\Microsoft\Windows\CurrentVersion\Explorer\StuckRects3, Settings
+RegWrite, REG_BINARY, HKEY_CURRENT_USER, Software\Microsoft\Windows\CurrentVersion\Explorer\StuckRects3, Settings, %Default%
 Run, %A_WinDir%\explorer.exe, %A_WinDir%
 
 If Default = %Ingame%
@@ -170,6 +171,7 @@ RegWrite, REG_SZ, HKEY_CURRENT_USER, Software\BUGGTool, SelectedLang, %SelectedL
 ChangeLang:
 ; Set anything to default, which will be kept if entries can't be read from ini files
 lng_author = ThxAndBye
+lng_autorun = Start with Windows
 lng_exit = Exit
 lng_first_run_text = The BUGGTool isn't set-up yet. Do you want to start the wizard now?
 lng_rerun_wizard = Are you sure that you want to start the wizard again?
@@ -187,18 +189,12 @@ If SelectedLang <> English (builtin)
 {
 	IfExist, %A_ScriptDir%\lang\%SelectedLang%.ini
 	{
-		IniRead, lng_author, %A_ScriptDir%\lang\%SelectedLang%.ini, BUGGTool, lng_author, %lng_author%
-		IniRead, lng_exit, %A_ScriptDir%\lang\%SelectedLang%.ini, BUGGTool, lng_exit, %lng_exit%
-		IniRead, lng_first_run_text, %A_ScriptDir%\lang\%SelectedLang%.ini, BUGGTool, lng_first_run_text, %lng_first_run_text%
-		IniRead, lng_rerun_wizard, %A_ScriptDir%\lang\%SelectedLang%.ini, BUGGTool, lng_rerun_wizard, %lng_rerun_wizard%
-		IniRead, lng_run_wizard, %A_ScriptDir%\lang\%SelectedLang%.ini, BUGGTool, lng_run_wizard, %lng_run_wizard%
-		IniRead, lng_start_pugb, %A_ScriptDir%\lang\%SelectedLang%.ini, BUGGTool, lng_start_pugb, %lng_start_pugb%
-		IniRead, lng_start_pugb_testsrv, %A_ScriptDir%\lang\%SelectedLang%.ini, BUGGTool, lng_start_pugb_testsrv, %lng_start_pugb_testsrv%
-		IniRead, lng_wizard_default, %A_ScriptDir%\lang\%SelectedLang%.ini, BUGGTool, lng_wizard_default, %lng_wizard_default%
-		IniRead, lng_wizard_finish, %A_ScriptDir%\lang\%SelectedLang%.ini, BUGGTool, lng_wizard_finish, %lng_wizard_finish%
-		IniRead, lng_wizard_ingame, %A_ScriptDir%\lang\%SelectedLang%.ini, BUGGTool, lng_wizard_ingame, %lng_wizard_ingame%
-		IniRead, lng_wizard_processname, %A_ScriptDir%\lang\%SelectedLang%.ini, BUGGTool, lng_wizard_processname, %lng_wizard_processname%
-		IniRead, lng_wizard_same_value, %A_ScriptDir%\lang\%SelectedLang%.ini, BUGGTool, lng_wizard_same_value, %lng_wizard_same_value%
+		keys := ["lng_author", "lng_autorun", "lng_exit", "lng_first_run_text", "lng_rerun_wizard", "lng_run_wizard", "lng_start_pugb", "lng_start_pugb_testsrv", "lng_wizard_default", "lng_wizard_finish", "lng_wizard_ingame", "lng_wizard_processname", "lng_wizard_same_value"]
+		for k, v in keys
+		{
+			tmp := %v%
+			IniRead, %v%, %A_ScriptDir%\lang\%SelectedLang%.ini, BUGGTool, %v%, %tmp%
+		}
 	}
 }
 
@@ -218,10 +214,36 @@ Menu, Tray, Add, Change language, :lang
 Menu, Tray, Add,
 Menu, Tray, Add, v %version%, NoOp
 Menu, Tray, Disable, v %version%
+; Autorun Option
+If A_IsCompiled = 1
+{
+	Menu, Tray, Add,
+	Menu, Tray, Add, %lng_autorun%, ToggleAutorun
+	RegRead, Autorun, HKEY_CURRENT_USER, Software\Microsoft\Windows\CurrentVersion\Run, BUGGTool
+	If ErrorLevel = 0
+		Menu, Tray, Check, %lng_autorun%
+}
 Menu, Tray, Add,
 Menu, Tray, Add, %lng_exit%, ExitApp
 
+	
+
+
 Menu, Tray, Default, %lng_start_pugb%
+return
+
+ToggleAutorun:
+RegRead, Autorun, HKEY_CURRENT_USER, Software\Microsoft\Windows\CurrentVersion\Run, BUGGTool
+If ErrorLevel = 0
+{
+	Menu, Tray, Uncheck, %lng_autorun%
+	RegDelete, HKEY_CURRENT_USER, Software\Microsoft\Windows\CurrentVersion\Run, BUGGTool
+}
+Else
+{
+	Menu, Tray, Check, %lng_autorun%
+	RegWrite, REG_SZ, HKEY_CURRENT_USER, Software\Microsoft\Windows\CurrentVersion\Run, BUGGTool, %A_ScriptFullPath%
+}
 return
 
 NoOp:
