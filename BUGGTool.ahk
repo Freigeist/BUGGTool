@@ -6,7 +6,7 @@
 #SingleInstance force
 
 SelectedLang = English (builtin)
-version = 1.0.0
+version = 1.0.1
 
 langs = English (builtin)
 
@@ -46,7 +46,7 @@ Else
 AfterGuiOK:
 Gui, Submit
 RegWrite, REG_SZ, HKEY_CURRENT_USER, Software\BUGGTool, SelectedLang, %SelectedLang%
-MsgBox, 64, BUGGTool, The language "%SelectedLang%" was saved. You might change it anytime at the tray menu.
+MsgBox, 64, BUGGTool, The language "%SelectedLang%" was applied. You can change it via the tray icon at any time.
 
 Init:
 gosub ChangeLang
